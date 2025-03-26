@@ -11,6 +11,10 @@ import Link from "next/link";
 import { toast } from "sonner";
 import FormField from "./FormField";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebase/client";
+import { signUp, signIn } from "@/lib/actions/auth.actions";
+
 
 
 
@@ -36,12 +40,48 @@ const AuthForm = ({ type }: { type: FormType }) => {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
         if(type as string === "registrera") {
+          const { name, email, password } = data;
+
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+          const result = await signUp({
+            uid: userCredential.user.uid,
+            name: name!,
+            email,
+            password,
+          });
+
+          if(!result?.success) {
+            toast.error(result?.message);
+            return;
+          }
+
             toast.success("Registrering lyckades");
             router.push("/logga-in");
         } else {
+            const { email, password } = data;
+
+            const userCredentials = await signInWithEmailAndPassword(
+              auth, 
+              email, 
+              password);
+
+            const idToken = await userCredentials.user.getIdToken();
+
+            if(!idToken) {
+              toast.error("Inloggning misslyckades");
+              return;
+            }
+
+            await signIn({ email, idToken });
+
             toast.success("Inloggning lyckades");
             router.push("/");
         }
