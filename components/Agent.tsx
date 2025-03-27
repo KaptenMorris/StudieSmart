@@ -73,7 +73,7 @@ const Agent = ({ userName }: AgentProps) => {
             <span>
               {currentCallStatus === CallStatus.INACTIVE ||
               currentCallStatus === CallStatus.FINISHED
-                ? "Call"
+                ? "Samtal"
                 : " . . ."}
             </span>
           </button>
